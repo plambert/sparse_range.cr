@@ -1,6 +1,6 @@
-# sparse_range
+# SparseRange
 
-TODO: Write a description here
+Manage a set of ranges of Int32 or Float64.
 
 ## Installation
 
@@ -36,4 +36,4 @@ TODO: Write development instructions here
 
 ## Contributors
 
-- [Paul M. Lambert](https://github.com/your-github-user) - creator and maintainer
+- [Paul M. Lambert](https://github.com/plambert) - creator and maintainer
