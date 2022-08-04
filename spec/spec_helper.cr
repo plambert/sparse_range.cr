@@ -2,8 +2,8 @@ require "spec"
 require "../src/sparse_range"
 require "bit_array"
 
-alias NumType = Int32
-alias RangeType = Range(NumType, NumType)
+# alias NumType = Int32
+# alias RangeType = Range(NumType, NumType)
 
 FIXTURES = [
   [10..19, 30..39, 50..59],
@@ -14,10 +14,10 @@ FIXTURES = [
 ]
 
 def fixture(index : Int32 = 0)
-  SparseRange::Int32.new FIXTURES[index]
+  SparseRange(Int32).new FIXTURES[index]
 end
 
-def compare_ranges(list list_ : Array({String, Array(RangeType)}))
+def compare_ranges(list list_ : Array({String, Array(Int32)}))
   min = list_.map { |entry| entry[1].map(&.begin).min }.min
   max = list_.map { |entry| entry[1].map(&.end).max }.max
   list = list_.map { |entry| {name: entry[0], ranges: entry[1], bits: to_bitarray(entry[1], min, max), min: entry[1].map(&.begin).min, max: entry[1].map(&.end).max} }

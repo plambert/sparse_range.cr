@@ -2,24 +2,13 @@
 
 require "bit_array"
 
-class SparseRange
+class SparseRange(T)
   VERSION = "0.1.0"
 
-  def new(list : Array(::Int32 | Range(::Int32, ::Int32)))
-    SparseRange::Int.new list
-  end
-
-  def new(list : Array(Float64 | Range(Float64, Float64)))
-    SparseRange::Float64.new list
-  end
-end
-
-class SparseRange::Int32 < SparseRange
-  alias NumType = ::Int32
-  alias RangeType = Range(NumType, NumType)
-  property ranges : Array(RangeType)
-  getter min : NumType? = nil
-  getter max : NumType? = nil
+  # alias RangeType = Range(T, T)
+  property ranges : Array(Range(T, T))
+  getter min : T? = nil
+  getter max : T? = nil
   property debug : Bool = false
 
   def initialize(*, @ranges, assert : Bool = true, sort : Bool? = nil)
@@ -30,16 +19,16 @@ class SparseRange::Int32 < SparseRange
     end
   end
 
-  def initialize(list : Array(RangeType | Array(RangeType) | NumType), assert : Bool = true, sort : Bool? = nil)
-    @ranges = [] of RangeType
+  def initialize(list : Array(Range(T, T) | Array(Range(T, T)) | T), assert : Bool = true, sort : Bool? = nil)
+    @ranges = [] of Range(T, T)
     list.each do |entry|
       case entry
-      when RangeType
+      when Range(T, T)
         @ranges << entry
-      when Array(RangeType)
+      when Array(Range(T, T))
         @ranges += entry
-      when NumType
-        @ranges << RangeType.new entry, entry
+      when T
+        @ranges << Range(T, T).new entry, entry
       else
         raise "#{entry}: cannot handle a #{typeof(entry)}"
       end
@@ -55,7 +44,23 @@ class SparseRange::Int32 < SparseRange
   end
 
   def initialize
-    @ranges = [] of RangeType
+    @ranges = [] of Range(T, T)
+  end
+
+  def succ(thing : Int)
+    thing.succ
+  end
+
+  def succ(thing : Float)
+    thing.next_float
+  end
+
+  def pred(thing : Int)
+    thing.pred
+  end
+
+  def pred(thing : Float)
+    thing.prev_float
   end
 
   private def set_min_max(value)
@@ -111,12 +116,12 @@ class SparseRange::Int32 < SparseRange
   def sort!
     return self if @ranges.size < 2
     old_ranges = @ranges.sort { |a, b| a.begin <=> b.begin }
-    @ranges = Array(RangeType).new(old_ranges.size)
+    @ranges = Array(Range(T, T)).new(old_ranges.size)
     @ranges << old_ranges.shift
     old_ranges.each do |this_range|
       last_range = @ranges[-1]
-      if this_range.begin.pred <= last_range.end
-        @ranges[-1] = RangeType.new last_range.begin, this_range.end
+      if pred(this_range.begin) <= last_range.end
+        @ranges[-1] = Range(T, T).new last_range.begin, this_range.end
       else
         @ranges << this_range
       end
@@ -151,16 +156,16 @@ class SparseRange::Int32 < SparseRange
       true
     elsif b.begin < a.begin && b.end > a.end
       true
-    elsif a.begin == b.end.succ || a.end == b.begin.pred
+    elsif a.begin == succ(b.end) || a.end == pred(b.begin)
       true
     else
       false
     end
   end
 
-  def add(value : NumType)
+  def add(value : T)
     # STDERR.puts "\nRANGES: #{@ranges.inspect}"
-    if idx = ranges.bsearch_index { |r| r.end >= value.pred }
+    if idx = ranges.bsearch_index { |r| r.end >= pred(value) }
       found_range = ranges[idx]
       # STDERR.puts "FOUND: ##{idx} = #{found_range}"
       val_begin = found_range.begin
@@ -169,13 +174,13 @@ class SparseRange::Int32 < SparseRange
         # STDERR.puts "#{value} is >= #{val_begin} and <= #{val_end}"
         # "#{value} is included in a range already: #{found_range}"
         # return self
-      elsif val_begin == value.succ
-        new_range = RangeType.new value, val_end
+      elsif val_begin == succ(value)
+        new_range = Range(T, T).new value, val_end
         # puts "#{value} precedes #{found_range} -> #{new_range}"
         ranges[idx] = new_range
         # STDERR.puts "##{idx}: #{found_range} -> #{new_range}"
       elsif val_begin > value
-        new_range = RangeType.new value, value
+        new_range = Range(T, T).new value, value
         if idx == 0
           # puts "#{value} is before the first range #{found_range}, inserting #{new_range}"
         else
@@ -183,15 +188,15 @@ class SparseRange::Int32 < SparseRange
         end
         # the value is not part of this range or the previous, so insert a new range
         ranges.insert(idx, new_range)
-      elsif val_end == value.pred
-        new_range = RangeType.new val_begin, value
+      elsif val_end == pred(value)
+        new_range = Range(T, T).new val_begin, value
         # puts "#{value} succeeds #{found_range} -> #{new_range}"
         ranges[idx] = new_range
       else
         # puts "ERROR: #{value}: idx is #{idx} but no criteria matched"
       end
     else
-      new_range = RangeType.new value, value
+      new_range = Range(T, T).new value, value
       # puts "#{value} is after last range #{ranges[-1]?}, appending #{new_range}"
       ranges << new_range
     end
@@ -199,18 +204,18 @@ class SparseRange::Int32 < SparseRange
     @max = Math.max(max || value, value)
   end
 
-  def <<(value : NumType)
+  def <<(value : T)
     self.add value
   end
 
   # naive, simple implementation
-  # def add_(range_to_add : RangeType)
+  # def add_(range_to_add : Range(T, T))
   #   range_to_add.each { |value| self.add value }
   # end
 
   def merge_ranges?(a, b)
     if overlaps? a, b
-      RangeType.new Math.min(a.begin, b.begin), Math.max(a.end, b.end)
+      Range(T, T).new Math.min(a.begin, b.begin), Math.max(a.end, b.end)
     else
       nil
     end
@@ -220,11 +225,11 @@ class SparseRange::Int32 < SparseRange
     merge_ranges?(a, b) || raise "Cannot merge #{a} with #{b}: they do not overlap"
   end
 
-  # def add(range_to_add : RangeType)
+  # def add(range_to_add : Range(T, T))
   #   if @ranges.size == 0
   #     @ranges << range_to_add
   #   else
-  #     new_ranges = Array(RangeType).new(@ranges.size)
+  #     new_ranges = Array(Range(T, T)).new(@ranges.size)
   #     new_ranges << @ranges.shift
   #     @ranges.each do |old_range|
   #       if overlaps? old_range, new_ranges[-1]
@@ -264,7 +269,7 @@ class SparseRange::Int32 < SparseRange
   # #     # just one range hit
   # #     puts "just one range hit" if @debug
   # #     if range_to_add_end.succ >= first_found.begin
-  # #       new_range = RangeType.new [first_found.begin, range_to_add_begin].min, [first_found.end, range_to_add_end].max
+  # #       new_range = Range(T, T).new [first_found.begin, range_to_add_begin].min, [first_found.end, range_to_add_end].max
   # #       puts "#{range_to_add} overlaps #{first_found} -> #{new_range}" if @debug
   # #       @ranges[first_index] = new_range
   # #     else
@@ -274,14 +279,14 @@ class SparseRange::Int32 < SparseRange
   # #     end
   # #   elsif range_to_add_end.succ >= second_found.begin
   # #     # merges all of them
-  # #     new_range = RangeType.new [first_found.begin, range_to_add_begin].min, [second_found.end, range_to_add_end].max
+  # #     new_range = Range(T, T).new [first_found.begin, range_to_add_begin].min, [second_found.end, range_to_add_end].max
   # #     puts "#{range_to_add} is merging #{second_index - first_index + 1} ranges: #{@ranges[first_index..second_index].map(&.to_s).join(", ")} -> #{new_range}" if @debug
   # #     @ranges[first_index, second_index - first_index + 1] = new_range
   # #   end
   # # elsif first_index
   # #   # merge the found range with all succeeding ranges
   # #   found_range = ranges[first_index]
-  # #   new_range = RangeType.new [found_range.begin, range_to_add_begin].min, range_to_add_end
+  # #   new_range = Range(T, T).new [found_range.begin, range_to_add_begin].min, range_to_add_end
   # #   puts "#{range_to_add} is merging #{@ranges.size - first_index} ranges: #{@ranges[first_index..].map(&.to_s).join(", ")} -> #{new_range}" if @debug
   # #   @ranges[first_index, @ranges.size - first_index] = new_range
   # # elsif second_index
@@ -295,11 +300,11 @@ class SparseRange::Int32 < SparseRange
   # @max = max ? Math.max(max || range_to_add_end, range_to_add_end) : range_to_add_end
   # end
 
-  def add(range_to_add : RangeType)
+  def add(range_to_add : Range(T, T))
     if @ranges.size == 0
       @ranges << range_to_add
     else
-      adjacent_to_begin = range_to_add.begin.pred
+      adjacent_to_begin = pred(range_to_add.begin)
       index = @ranges.bsearch_index { |r| r.end >= adjacent_to_begin }
       case index
       when nil
@@ -342,17 +347,17 @@ class SparseRange::Int32 < SparseRange
   end
 end
 
-class SparseRange::Float64 < SparseRange
-  alias NumType = Float64
-  alias RangeType = Range(NumType, NumType)
-  property ranges : Array(RangeType)
-  getter min : NumType? = nil
-  getter max : NumType? = nil
+# class SparseRange::Float64 < SparseRange
+#   alias T = Float64
+#   alias Range(T, T) = Range(T, T)
+#   property ranges : Array(Range(T, T))
+#   getter min : T? = nil
+#   getter max : T? = nil
 
-  def initialize(list : Array(NumType | RangeType))
-    @ranges = [] of RangeType
-    list.each do |entry|
-      self << entry
-    end
-  end
-end
+#   def initialize(list : Array(T | Range(T, T)))
+#     @ranges = [] of Range(T, T)
+#     list.each do |entry|
+#       self << entry
+#     end
+#   end
+# end
