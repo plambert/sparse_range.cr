@@ -10,6 +10,9 @@ class SparseRange(T)
   getter min : T? = nil
   getter max : T? = nil
   property debug : Bool = false
+  property cursor : T? = nil
+
+  include Iterator(T)
 
   def initialize(*, @ranges, assert : Bool = true, sort : Bool? = nil)
     if assert
@@ -45,6 +48,12 @@ class SparseRange(T)
 
   def initialize
     @ranges = [] of Range(T, T)
+  end
+
+  def next
+    if !@cursor
+      @cursor = self.min
+    end
   end
 
   def succ(thing : Int)
@@ -88,29 +97,26 @@ class SparseRange(T)
   end
 
   def min
-    @min || min!
+    if r = @ranges[0]?
+      r.begin
+    else
+      raise IndexError.new "cannot compute minimum of empty SparseRange"
+    end
+    # @min || min!
   end
 
   def min!
-    @min = @ranges.map(&.begin).min
-    @min
+    # @min = @ranges.map(&.begin).min
+    # @min
   end
 
   def max
-    @max || max!
-  end
-
-  def max!
-    @max = @ranges.map(&.end).max
-    @max
-  end
-
-  def minmax
-    {min, max}
-  end
-
-  def minmax!
-    {min!, max!}
+    if @ranges.size > 0
+      @ranges[-1].end
+    else
+      raise IndexError.new "cannot compute maximum of empty SparseRange"
+    end
+    # @max || max!
   end
 
   def sort!
@@ -129,21 +135,31 @@ class SparseRange(T)
     @ranges
   end
 
-  def assert!
-    ranges_copy = @ranges.clone
-    self.sort!
-    if @ranges != ranges_copy
-      STDERR.puts "INVALID RANGES: #{ranges_copy.map(&.to_s).join(", ")}"
-      STDERR.puts "SHOULD BE: #{@ranges.map(&.to_s).join(", ")}"
-      raise "assertion failed!"
+  def assert?
+    case @ranges.size
+    when 0, 1
+      true
+    else
+      index = 1
+      while index < @ranges.size
+        if @ranges[index - 1].end >= pred(@ranges[index].begin)
+          return false
+        end
+      end
     end
+    true
+  end
+
+  def assert!
+    assert? || raise "assertion failed at index #{index}: #{@ranges[index - 1]}, #{@ranges[index]}: invalid sequencing"
   end
 
   def to_bitarray
+    min_value = min
     bitarray = BitArray.new(self.size)
     @ranges.each do |range|
       range.each do |value|
-        bitarray[value - min] = true
+        bitarray[value - min_value] = true
       end
     end
     return bitarray
@@ -208,11 +224,6 @@ class SparseRange(T)
     self.add value
   end
 
-  # naive, simple implementation
-  # def add_(range_to_add : Range(T, T))
-  #   range_to_add.each { |value| self.add value }
-  # end
-
   def merge_ranges?(a, b)
     if overlaps? a, b
       Range(T, T).new Math.min(a.begin, b.begin), Math.max(a.end, b.end)
@@ -224,81 +235,6 @@ class SparseRange(T)
   def merge_ranges(a, b)
     merge_ranges?(a, b) || raise "Cannot merge #{a} with #{b}: they do not overlap"
   end
-
-  # def add(range_to_add : Range(T, T))
-  #   if @ranges.size == 0
-  #     @ranges << range_to_add
-  #   else
-  #     new_ranges = Array(Range(T, T)).new(@ranges.size)
-  #     new_ranges << @ranges.shift
-  #     @ranges.each do |old_range|
-  #       if overlaps? old_range, new_ranges[-1]
-  #         new_ranges[-1] = merge_ranges old_range, new_ranges[-1]
-  #       else
-  #         new_ranges << old_range
-  #       end
-  #     end
-  #     @ranges = new_ranges
-  #   end
-  # puts "ADD: #{range_to_add}" if @debug
-  # range_to_add_begin = range_to_add.begin
-  # range_to_add_end = range_to_add.end
-  # raise "#{range_to_add}: range must be ascending" if range_to_add_begin > range_to_add_end
-  # if @ranges.size == 0
-  #   @ranges << range_to_add
-  #   puts "empty ranges -> #{range_to_add}" if @debug
-  #   return self
-  # end
-  # adjacent = range_to_add.begin.pred
-  # index = @ranges.bsearch_index { |r| r.begin >= adjacent }
-  # while index < @ranges.size
-  #   if overlaps? @ranges[index], range_to_add
-  #     @ranges[index] =
-  # end
-  # first_index = @ranges.bsearch_index { |r| r.begin >= range_to_add_begin.pred }
-  # second_index = @ranges.bsearch_index { |r| r.end >= range_to_add_end.succ }
-  # puts "RANGES: #{@ranges}" if @debug
-  # puts "indices of #{range_to_add}: #{first_index} = #{first_index ? @ranges[first_index]? : nil}, #{second_index} = #{second_index ? @ranges[second_index]? : nil}" if @debug
-  # # if !first_index && second_index
-
-  # # end
-  # # if first_index && second_index
-  # #   first_found = @ranges[first_index]
-  # #   second_found = @ranges[second_index]
-  # #   if first_index == second_index
-  # #     # just one range hit
-  # #     puts "just one range hit" if @debug
-  # #     if range_to_add_end.succ >= first_found.begin
-  # #       new_range = Range(T, T).new [first_found.begin, range_to_add_begin].min, [first_found.end, range_to_add_end].max
-  # #       puts "#{range_to_add} overlaps #{first_found} -> #{new_range}" if @debug
-  # #       @ranges[first_index] = new_range
-  # #     else
-  # #       # must be below?
-  # #       puts "#{range_to_add} is below #{first_found}, inserting into first position" if @debug
-  # #       @ranges.insert(first_index, range_to_add)
-  # #     end
-  # #   elsif range_to_add_end.succ >= second_found.begin
-  # #     # merges all of them
-  # #     new_range = Range(T, T).new [first_found.begin, range_to_add_begin].min, [second_found.end, range_to_add_end].max
-  # #     puts "#{range_to_add} is merging #{second_index - first_index + 1} ranges: #{@ranges[first_index..second_index].map(&.to_s).join(", ")} -> #{new_range}" if @debug
-  # #     @ranges[first_index, second_index - first_index + 1] = new_range
-  # #   end
-  # # elsif first_index
-  # #   # merge the found range with all succeeding ranges
-  # #   found_range = ranges[first_index]
-  # #   new_range = Range(T, T).new [found_range.begin, range_to_add_begin].min, range_to_add_end
-  # #   puts "#{range_to_add} is merging #{@ranges.size - first_index} ranges: #{@ranges[first_index..].map(&.to_s).join(", ")} -> #{new_range}" if @debug
-  # #   @ranges[first_index, @ranges.size - first_index] = new_range
-  # # elsif second_index
-  # #   found_range = ranges[second_index]
-  # #   puts "ERROR: matched ranges ---, #{second_index} (---, #{found_range}), don't know what to do!" if @debug
-  # # else
-  # #   puts "#{range_to_add} is after the last range (#{@ranges[-1]?}), appending it" if @debug
-  # #   @ranges << range_to_add
-  # # end
-  # @min = min ? Math.min(min || range_to_add_begin, range_to_add_begin) : range_to_add_begin
-  # @max = max ? Math.max(max || range_to_add_end, range_to_add_end) : range_to_add_end
-  # end
 
   def add(range_to_add : Range(T, T))
     if @ranges.size == 0
