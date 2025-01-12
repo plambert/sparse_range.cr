@@ -1,0 +1,4 @@
+Naming/BlockParameterName:
+  Enabled: true
+  AllowedNames: [a, b, e, i, j, k, v, x, y, ex, io, ws, op, tx, id, ip, k1, k2, v1, v2]
+
