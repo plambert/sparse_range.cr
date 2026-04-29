@@ -1,6 +1,7 @@
 # SparseRange
 
-Manage a set of ranges of Int32 or Float64.
+Manage a set of ranges of integers, such as what you might write as
+`1..10,30,99..101`. Supports signed and unsigned 16-, 32-, 64-, and 128-bit integers.
 
 ## Installation
 
@@ -9,7 +10,7 @@ Manage a set of ranges of Int32 or Float64.
    ```yaml
    dependencies:
      sparse_range:
-       github: your-github-user/sparse_range
+       github: plambert/sparse_range
    ```
 
 2. Run `shards install`

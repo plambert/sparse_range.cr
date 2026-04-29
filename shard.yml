@@ -4,6 +4,10 @@ version: 0.1.0
 authors:
   - Paul M. Lambert <plambert@plambert.net>
 
+targets:
+  ints:
+    main: src/ints.cr
+
 crystal: 1.5.0
 
 license: MIT
