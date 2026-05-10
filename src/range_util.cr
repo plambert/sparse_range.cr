@@ -8,11 +8,11 @@ struct Range(B, E)
   end
 
   def overlaps?(other) : Bool
-    raise ArgumentError.new "cannot check overlap of exclusive ranges" if self.exclusive? || other.exclusive?
+    raise ArgumentError.new "cannot check overlap of exclusive ranges" if exclusive? || other.exclusive?
 
     # If either range includes either the begin or end of the other, they overlap
-    return true if (other.begin && self.includes? other.begin) ||
-                   (other.end && self.includes? other.end) ||
+    return true if (other.begin && includes? other.begin) ||
+                   (other.end && includes? other.end) ||
                    (self.begin && other.includes? self.begin) ||
                    (self.end && other.includes? self.end)
 
@@ -25,7 +25,7 @@ struct Range(B, E)
   # Check to see if one range abuts the other; this requires that the types involved
   # respond to `#pred` and `#succ`.
   def abuts?(other) : Bool
-    raise ArgumentError.new "cannot check abut of exclusive ranges" if self.exclusive? || other.exclusive?
+    raise ArgumentError.new "cannot check abut of exclusive ranges" if exclusive? || other.exclusive?
 
     return true if (self.end && other.begin && other.begin == self.end.succ) ||
                    (self.begin && other.end && other.end == self.begin.pred)

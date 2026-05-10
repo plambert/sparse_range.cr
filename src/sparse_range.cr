@@ -182,7 +182,7 @@ class SparseRange(T)
   end
 
   def min : T?
-    self.min? || raise IndexError.new "empty #{self.class} has no min"
+    min? || raise IndexError.new "empty #{self.class} has no min"
   end
 
   def max? : T?
@@ -194,31 +194,31 @@ class SparseRange(T)
   end
 
   def max
-    self.max? || raise IndexError.new "cannot compute maximum of empty SparseRange"
+    max? || raise IndexError.new "cannot compute maximum of empty SparseRange"
   end
 
   def dup
     SparseRange(T).new.tap do |new_sparse_range|
-      self.each_range do |range|
+      each_range do |range|
         new_sparse_range << range
       end
     end
   end
 
   macro def_to(method_name, target_type)
-    def to_{{method_name.id}}? : SparseRange({{target_type.id}})?
-      if SparseRange({{target_type.id}}) === self.class
+    def to_{{ method_name.id }}? : SparseRange({{ target_type.id }})?
+      if SparseRange({{ target_type.id }}) === self.class
         self.dup
       elsif empty?
-        SparseRange({{target_type.id}}).new
-      elsif min < {{target_type.id}}::MIN
+        SparseRange({{ target_type.id }}).new
+      elsif min < {{ target_type.id }}::MIN
         nil
-      elsif max > {{target_type.id}}::MAX
+      elsif max > {{ target_type.id }}::MAX
         nil
       else
-        r = SparseRange({{target_type.id}}).new
+        r = SparseRange({{ target_type.id }}).new
         self.each_range do |range|
-          r << ({{target_type.id}}.new(range.begin) .. {{target_type.id}}.new(range.end))
+          r << ({{ target_type.id }}.new(range.begin) .. {{ target_type.id }}.new(range.end))
         end
         r
       end
@@ -333,20 +333,20 @@ class SparseRange(T)
   def to_bitarray
     return BitArray.new(0) if empty?
     min_value = min
-    raise ArgumentError.new "don't know how to include negative numbers in a BitArray (#{self.min}..#{self.max})" if min_value < 0
+    raise ArgumentError.new "don't know how to include negative numbers in a BitArray (#{min}..#{max})" if min_value < 0
     max_value = max
 
     # if the SparseRange is crowded we start with an array of 1s and use the inverted
     # inverted ranges to set zeros
     if crowded?
       bitarray = BitArray.new(max_value, true)
-      self.each_excluded do |value|
+      each_excluded do |value|
         bitarray[value] = false
       end
       bitarray
     else
       bitarray = BitArray.new(max_value, false)
-      self.each do |value|
+      each do |value|
         bitarray[value] = true
       end
       bitarray
@@ -354,13 +354,13 @@ class SparseRange(T)
   end
 
   def to_bitstring
-    String.build(self.count) do |str|
+    String.build(count) do |str|
       to_bitstring(str)
     end
   end
 
   def to_bitstring(io)
-    self.to_bitarray.each do |value|
+    to_bitarray.each do |value|
       io << (value ? '1' : '0')
     end
   end
@@ -389,7 +389,7 @@ class SparseRange(T)
   # end
 
   def <<(value)
-    self.add value
+    add value
   end
 
   def dirty!
@@ -399,7 +399,7 @@ class SparseRange(T)
   private def add_one(value : T)
     dirty!
     # @cursor = nil
-    self.add Range(T, T).new value, value
+    add Range(T, T).new value, value
   end
 
   def subtract(*other : T | Range(T, T) | Array(T) | Array(Range(T, T)) | Array(T | Range(T, T))) : self
@@ -546,7 +546,7 @@ class SparseRange(T)
   end
 
   def span?
-    if (_max = self.max?) && (_min = self.min?)
+    if (_max = max?) && (_min = min?)
       _max - _min + 1
     else
       nil
@@ -554,7 +554,7 @@ class SparseRange(T)
   end
 
   def span
-    self.span? || raise IndexError.new "empty #{self.class} has no span"
+    span? || raise IndexError.new "empty #{self.class} has no span"
   end
 
   def size

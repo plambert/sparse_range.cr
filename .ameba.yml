@@ -5,3 +5,8 @@ Naming/BlockParameterName:
 Metrics/CyclomaticComplexity:
   Enabled: false
 
+Style/VerboseNilType:
+  Enabled: false
+
+Lint/ElseNil:
+  Enabled: false
