@@ -20,6 +20,7 @@ class SparseRange
     property? lines = false
     property? each = false
     property? json_string = false
+    property? help = false
     property delimiter : String = ","
 
     def initialize(@argv = ARGV.dup)
@@ -28,7 +29,7 @@ class SparseRange
       while opt = opts.shift?
         case opt
         when "--help", "-h"
-          raise CLIError.new "#{opt}: help not implemented yet"
+          @help = true
         when "--delimiter"
           @delimiter = (opts.shift? || raise ArgumentError.new "#{opt}: expected an argument")
         when "--brackets", "--[]", "-[]"
@@ -101,7 +102,58 @@ class SparseRange
       end
     end
 
+    def print_help(io = STDOUT) : Nil
+      io.puts <<-HELP
+        Usage: #{PROGRAM_NAME} [options] [INTEGER|RANGE ...]
+
+        Build a sparse set of Int64 ranges from the arguments and print it.
+        Adjacent and overlapping inputs are coalesced.
+
+        Inputs:
+          N           single integer (e.g. 5, -3)
+          A-B, A..B   inclusive range
+          A...B       exclusive range (B is not included)
+
+        Output format:
+          --list                       print as a list (default)
+          --json                       print as JSON
+          --bits                       print as a 0/1 bitstring from min to max
+
+        Layout:
+          --compact, --ranges          print coalesced ranges (default)
+          --each, --all, --every       expand to individual integers
+          --lines                      one entry per line
+          --no-lines, --one-line       all entries on one line (default)
+          --delimiter STR              separator between entries (default ",")
+
+        Brackets:
+          --brackets, --[], -[]        enclose output in [ ]
+          --no-brackets                no brackets
+          --brackets=LR                use the two-char pair LR (e.g. --brackets=<>)
+          --left-bracket STR           set just the left bracket
+          --right-bracket STR          set just the right bracket
+          --square-brackets            [ ]
+          --round-brackets, --parens   ( )
+          --angle-brackets             < >
+          --curly-brackets             { }
+
+        Other:
+          -h, --help                   show this help and exit
+
+        Examples:
+          #{PROGRAM_NAME} 1 2 3 5..10            # 1..3,5..10
+          #{PROGRAM_NAME} --each 1 2 3 5..10     # 1,2,3,5,6,7,8,9,10
+          #{PROGRAM_NAME} --json --each 1..3 5   # [1,2,3,5]
+          #{PROGRAM_NAME} --bits 0 5             # 100001
+        HELP
+    end
+
     def run
+      if help?
+        print_help
+        return
+      end
+
       io = STDOUT
 
       case output_format
