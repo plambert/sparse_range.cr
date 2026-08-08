@@ -11,14 +11,13 @@ describe SparseRange(Int8) do
     sparserange.should be_a SparseRange(Int8)
     sparserange.ranges.size.should eq 2
   end
-  sparserange = SparseRange(Int8).new list: [-19_i8..-10_i8, 10_i8..19_i8, 30_i8..39_i8]
   it "calculates the min/max correctly" do
-    sparserange.should be_a SparseRange(Int8)
+    sparserange = SparseRange(Int8).new list: [-19_i8..-10_i8, 10_i8..19_i8, 30_i8..39_i8]
     sparserange.min.should eq -19
     sparserange.max.should eq 39
   end
   it "adds integers" do
-    sparserange.should be_a SparseRange(Int8)
+    sparserange = SparseRange(Int8).new list: [-19_i8..-10_i8, 10_i8..19_i8, 30_i8..39_i8]
     sparserange.add 40
     sparserange.ranges.should eq [-19_i8..-10_i8, 10_i8..19_i8, 30_i8..40_i8]
     sparserange.add 20
@@ -37,7 +36,7 @@ describe SparseRange(Int8) do
     sparserange.ranges.should eq [-25_i8..-25_i8, -20_i8..-10_i8, -5_i8..-5_i8, 10_i8..20_i8, 25_i8..25_i8, 30_i8..40_i8, 45_i8..45_i8]
   end
   it "adds ranges" do
-    sparserange.should be_a SparseRange(Int8)
+    sparserange = SparseRange(Int8).new list: [-25_i8..-25_i8, -20_i8..-10_i8, -5_i8..-5_i8, 10_i8..20_i8, 25_i8..25_i8, 30_i8..40_i8, 45_i8..45_i8]
     sparserange.add(27_i8..28_i8)
     sparserange.ranges.should eq [-25_i8..-25_i8, -20_i8..-10_i8, -5_i8..-5_i8, 10_i8..20_i8, 25_i8..25_i8, 27_i8..28_i8, 30_i8..40_i8, 45_i8..45_i8]
     sparserange.add(50_i8..59_i8)

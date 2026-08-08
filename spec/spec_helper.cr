@@ -2,6 +2,8 @@ require "spec"
 require "../src/sparse_range"
 require "bit_array"
 
+alias RangeType = Range(Int32, Int32)
+
 FIXTURES = [
   [10..19, 30..39, 50..59],
   [-19..-10, 10..19, 30..39],
@@ -14,42 +16,54 @@ def fixture(index : Int32 = 0)
   SparseRange(Int32).new FIXTURES[index]
 end
 
-def compare_ranges(list list_ : Array({String, Array(Int32)}))
-  min = list_.min_of { |entry| entry[1].min_of(&.begin) }
-  max = list_.max_of { |entry| entry[1].max_of(&.end) }
-  # min = list_.map { |entry| entry[1].map(&.begin).min }.min
-  # max = list_.map { |entry| entry[1].map(&.end).max }.max
-  list = list_.map { |entry| {name: entry[0], ranges: entry[1], bits: to_bitarray(entry[1], min, max), min: entry[1].min_of(&.begin), max: entry[1].max_of(&.end)} }
-  window_size = 120
-  list.each do |tuple|
-    printf "%-10s: [%3d - %3d] %s\n", tuple[:name], min, max, tuple[:ranges].map(&.to_s).join(", ")
+# Renders several named range lists as aligned bit grids, so that overlaps and
+# gaps between them can be compared by eye.
+#
+# ```
+# compare_ranges [{"before", [1..5]}, {"after", [1..3, 5..5]}]
+# ```
+def compare_ranges(entries : Array({String, Array(RangeType)}), io : IO = STDOUT,
+                   window_size : Int32 = 120) : Nil
+  lowest = entries.min_of { |entry| entry[1].min_of(&.begin) }
+  highest = entries.max_of { |entry| entry[1].max_of(&.end) }
+  rows = entries.map do |entry|
+    {
+      name:   entry[0],
+      ranges: entry[1],
+      bits:   fixture_bitarray(entry[1], lowest, highest),
+      min:    entry[1].min_of(&.begin),
+      max:    entry[1].max_of(&.end),
+    }
   end
-  print "\n"
-  window_idx = min
-  while window_idx < max
-    window_end = (window_idx + window_size - 1).clamp(min, max)
-    list.each do |tuple|
-      printf "%-10s: %3d ", tuple[:name], window_idx
-      (window_idx..window_end).each do |idx|
-        if idx < tuple[:min] || idx > tuple[:max]
-          print "."
+
+  rows.each do |row|
+    io.printf "%-10s: [%3d - %3d] %s\n", row[:name], lowest, highest,
+      row[:ranges].join(", ")
+  end
+  io << '\n'
+
+  window_start = lowest
+  while window_start <= highest
+    window_end = (window_start + window_size - 1).clamp(lowest, highest)
+    rows.each do |row|
+      io.printf "%-10s: %3d ", row[:name], window_start
+      (window_start..window_end).each do |position|
+        if position < row[:min] || position > row[:max]
+          io << '.'
         else
-          print tuple[:bits][idx]? ? "*" : "-"
+          io << (row[:bits][position - lowest]? ? '*' : '-')
         end
       end
-      printf " %3d\n", window_end
+      io.printf " %3d\n", window_end
     end
-    window_idx += window_size
+    window_start += window_size
   end
 end
 
-def to_bitarray(list : Array(RangeType), min, max)
-  bitarray = BitArray.new(max - min + 1)
+private def fixture_bitarray(list : Array(RangeType), lowest : Int32, highest : Int32) : BitArray
+  bitarray = BitArray.new(highest - lowest + 1)
   list.each do |range|
-    range.each do |value|
-      raise "#{value} - #{min} = #{value - min}" if value - min < 0
-      bitarray[value - min] = true
-    end
+    range.each { |value| bitarray[value - lowest] = true }
   end
   bitarray
 end

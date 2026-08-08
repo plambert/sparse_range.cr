@@ -1,5 +1,9 @@
 name: sparse_range
-version: 0.1.0
+version: 0.9.0
+
+description: |
+  A sorted, coalesced set of integer ranges over any integer type, with a
+  command line tool for building and printing them from the shell.
 
 authors:
   - Paul M. Lambert <plambert@plambert.net>
@@ -8,6 +12,8 @@ targets:
   ints:
     main: src/ints.cr
 
-crystal: 1.5.0
+crystal: ">= 1.21"
 
 license: MIT
+
+repository: https://github.com/plambert/sparse_range.cr

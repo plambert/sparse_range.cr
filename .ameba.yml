@@ -1,9 +1,15 @@
-Naming/BlockParameterName:
-  Enabled: true
-  AllowedNames: [a, b, e, i, j, k, v, x, y, ex, io, ws, op, tx, id, ip, k1, k2, v1, v2]
+# global ameba configuration
 
 Metrics/CyclomaticComplexity:
-  Enabled: false
+  Enabled: true
+  MaxComplexity: 12
+
+Naming/BlockParameterName:
+  Enabled: true
+  MinNameLength: 3
+  AllowNamesEndingInNumbers: true
+  AllowedNames: [a, b, db, ex, id, io, ip, op, rs, tx, wg, ws]
+  ForbiddenNames: []
 
 Style/VerboseNilType:
   Enabled: false

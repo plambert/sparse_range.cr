@@ -13,15 +13,14 @@ describe SparseRange(Int32) do
     sparserange.ranges.size.should eq 2
   end
 
-  sparserange = SparseRange(Int32).new list: [-19..-10, 10..19, 30..39]
   it "calculates the min/max correctly" do
-    sparserange.should be_a SparseRange(Int32)
+    sparserange = SparseRange(Int32).new list: [-19..-10, 10..19, 30..39]
     sparserange.min.should eq -19
     sparserange.max.should eq 39
   end
 
   it "adds integers" do
-    sparserange.should be_a SparseRange(Int32)
+    sparserange = SparseRange(Int32).new list: [-19..-10, 10..19, 30..39]
     sparserange.add 40
     sparserange.ranges.should eq [-19..-10, 10..19, 30..40]
     sparserange.add 20
@@ -41,7 +40,7 @@ describe SparseRange(Int32) do
   end
 
   it "adds ranges" do
-    sparserange.should be_a SparseRange(Int32)
+    sparserange = SparseRange(Int32).new list: [-25..-25, -20..-10, -5..-5, 10..20, 25..25, 30..40, 45..45]
     sparserange.add(27..28)
     sparserange.ranges.should eq [-25..-25, -20..-10, -5..-5, 10..20, 25..25, 27..28, 30..40, 45..45]
     sparserange.add(50..59)
@@ -57,7 +56,7 @@ describe SparseRange(Int32) do
   end
 
   it "subtracts ranges" do
-    sparserange.should be_a SparseRange(Int32)
+    sparserange = SparseRange(Int32).new list: [-25..-25, -20..-10, -5..-5, 10..20, 25..25, 30..40, 45..45]
     sparserange.add([27..28, 50..59, 45..50, -5..10, -39..-35, -33..-27])
     sparserange.ranges.should eq [-39..-35, -33..-27, -25..-25, -20..-10, -5..20, 25..25, 27..28, 30..40, 45..59]
 
@@ -100,7 +99,7 @@ describe SparseRange(Int32) do
     sparserange.ranges.should eq [1_i32..3_i32, 5_i32..5_i32]
   end
 
-  it "can invert the ranges" do
+  it "iterates the excluded values" do
     sparserange = SparseRange(Int32).new(list: "1,3,5")
     result = [] of Int32
     sparserange.each_excluded(start_at: 0, end_at: 9) do |num|
