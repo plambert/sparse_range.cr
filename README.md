@@ -1,5 +1,6 @@
 # SparseRange
 
+[![docs](https://img.shields.io/badge/docs-latest-blue)](https://plambert.github.io/sparse_range.cr/latest/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 A Crystal shard for managing a sorted, coalesced set of integer ranges — the kind of thing

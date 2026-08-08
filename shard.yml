@@ -17,3 +17,4 @@ crystal: ">= 1.21"
 license: MIT
 
 repository: https://github.com/plambert/sparse_range.cr
+documentation: https://plambert.github.io/sparse_range.cr/latest/
