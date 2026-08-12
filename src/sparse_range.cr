@@ -28,9 +28,14 @@ require "./range_util"
 # ```
 #
 # `T` must respond to `#succ`, `#pred`, `::MIN` and `::MAX`; in practice that
-# means one of the integer types. Values are never assumed to fit in any
-# particular width: `#count` and `#span` return `UInt128` so that they stay
-# correct across the full range of `T`.
+# means one of the integer types. `#count` and `#span` return `UInt128`, since
+# a cardinality does not fit in `T` — `Range#size` wraps and `max - min + 1`
+# overflows at full width.
+#
+# NOTE: the one cardinality `UInt128` cannot express is 2 ** 128, reached only
+# by a 128-bit set spanning its entire domain. `#count` and `#span` raise
+# `OverflowError` there rather than returning a wrong answer. Every other set,
+# of every type, is exact.
 class SparseRange(T)
   # Raised when a string cannot be parsed into a `SparseRange`.
   class ParseException < Exception; end
@@ -505,14 +510,14 @@ class SparseRange(T)
   end
 
   # :nodoc:
-  # Returns `high - low` as a `UInt128`, which no pair of `T` values can
-  # overflow.
+  # Returns `high - low` as a `UInt128`.
+  #
+  # Both bounds are reinterpreted as `UInt128` and subtracted with wrapping
+  # arithmetic. Doing it this way means the intermediate can never overflow a
+  # signed type: subtracting in `Int128` would raise for any 128-bit range
+  # wider than `Int128::MAX`, such as `Int128::MIN..0`.
   def self.distance(low : T, high : T) : UInt128
-    {% if T.name == "UInt128" %}
-      high - low
-    {% else %}
-      (high.to_i128 - low.to_i128).to_u128
-    {% end %}
+    high.to_u128! &- low.to_u128!
   end
 
   # :nodoc:

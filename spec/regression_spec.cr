@@ -311,6 +311,34 @@ Spectator.describe SparseRange do
     end
   end
 
+  describe "the 128-bit cardinality limit" do
+    it "raises rather than returning a wrong count, but only at 2 ** 128" do
+      expect { SparseRange(UInt128).new([UInt128::MIN..UInt128::MAX]).count }
+        .to raise_error(OverflowError)
+      expect { SparseRange(Int128).new([Int128::MIN..Int128::MAX]).span }
+        .to raise_error(OverflowError)
+    end
+
+    # Subtracting in Int128 would raise for any signed 128-bit range wider than
+    # Int128::MAX, far below the domain-wide case above.
+    it "is exact for a signed 128-bit range wider than Int128::MAX" do
+      expect(SparseRange(Int128).new([Int128::MIN..0_i128]).count)
+        .to eq 170141183460469231731687303715884105729_u128
+      expect(SparseRange(Int128).new([Int128::MIN..(-1_i128)]).count)
+        .to eq 170141183460469231731687303715884105728_u128
+      expect(SparseRange(UInt128).new([0_u128..(UInt128::MAX - 1)]).count)
+        .to eq 340282366920938463463374607431768211455_u128
+    end
+
+    it "is exact for every narrower type at full width" do
+      expect(SparseRange(Int64).new([Int64::MIN..Int64::MAX]).count)
+        .to eq 18446744073709551616_u128
+      expect(SparseRange(UInt64).new([UInt64::MIN..UInt64::MAX]).count)
+        .to eq 18446744073709551616_u128
+      expect(SparseRange(Int8).new([Int8::MIN..Int8::MAX]).count).to eq 256
+    end
+  end
+
   describe "#span" do
     it "does not overflow across the full width of T" do
       expect(SparseRange(UInt8).new([0_u8..255_u8]).span).to eq 256
