@@ -58,7 +58,7 @@ Spectator.describe SparseRange(Int8) do
     sparserange = SparseRange(Int8).new(list: "1,3,5")
     expect(sparserange.ranges).to eq [1_i8..1_i8, 3_i8..3_i8, 5_i8..5_i8]
   end
-  it "can invert the ranges" do
+  it "iterates the excluded values" do
     sparserange = SparseRange(Int8).new(list: "1,3,5")
     result = [] of Int8
     sparserange.each_excluded(start_at: 0, end_at: 9) do |num|
