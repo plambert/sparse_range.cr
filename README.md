@@ -254,8 +254,9 @@ on stderr and a non-zero exit, never a stack trace, and a closed pipe exits clea
 ## Development
 
 ```bash
-shards install                 # fetch dependencies
+shards install                 # fetch dependencies (Spectator, for the specs)
 crystal spec                   # run the test suite
+crystal spec -- --order rand   # run it in a randomised order
 crystal spec -v --error-trace  # verbose, with full backtraces
 crystal tool format            # format all .cr files
 ameba                          # lint (configured in .ameba.yml)
@@ -269,7 +270,8 @@ crystal docs                   # generate API docs into docs/
 Set `SPARSE_RANGE_DEBUG=1`, or pass `debug: true` to a constructor, to trace `#add`,
 `#subtract` and `#sort!` on stderr.
 
-Specs are split per integer type under `spec/`. `spec/regression_spec.cr` holds the
+Specs use [Spectator](https://gitlab.com/arctic-fox/spectator) and are split per integer type
+under `spec/`. `spec/regression_spec.cr` holds the
 cross-cutting invariant, boundary and property tests, including a randomised differential test
 against `Set(Int32)`; add new behavioural tests there or to
 `spec/sparse_range_int32_spec.cr` first.

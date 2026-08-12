@@ -14,6 +14,11 @@ targets:
 
 crystal: ">= 1.21"
 
+development_dependencies:
+  spectator:
+    gitlab: arctic-fox/spectator
+    version: "~> 0.11"
+
 license: MIT
 
 repository: https://github.com/plambert/sparse_range.cr

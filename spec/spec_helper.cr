@@ -1,4 +1,4 @@
-require "spec"
+require "spectator"
 require "../src/sparse_range"
 require "bit_array"
 

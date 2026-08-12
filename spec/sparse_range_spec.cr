@@ -1,21 +1,21 @@
 require "./spec_helper"
 
-describe SparseRange do
+Spectator.describe SparseRange do
   it "exposes the version from shard.yml" do
-    SparseRange::VERSION.should match /\A\d+\.\d+\.\d+/
+    expect(SparseRange::VERSION).to match /\A\d+\.\d+\.\d+/
   end
 
   it "creates a SparseRange for every supported integer type" do
-    SparseRange.new(Int8).should be_a SparseRange(Int8)
-    SparseRange.new(UInt8).should be_a SparseRange(UInt8)
-    SparseRange.new(Int16).should be_a SparseRange(Int16)
-    SparseRange.new(UInt16).should be_a SparseRange(UInt16)
-    SparseRange.new(Int32).should be_a SparseRange(Int32)
-    SparseRange.new(UInt32).should be_a SparseRange(UInt32)
-    SparseRange.new(Int64).should be_a SparseRange(Int64)
-    SparseRange.new(UInt64).should be_a SparseRange(UInt64)
-    SparseRange.new(Int128).should be_a SparseRange(Int128)
-    SparseRange.new(UInt128).should be_a SparseRange(UInt128)
+    expect(SparseRange.new(Int8)).to be_a SparseRange(Int8)
+    expect(SparseRange.new(UInt8)).to be_a SparseRange(UInt8)
+    expect(SparseRange.new(Int16)).to be_a SparseRange(Int16)
+    expect(SparseRange.new(UInt16)).to be_a SparseRange(UInt16)
+    expect(SparseRange.new(Int32)).to be_a SparseRange(Int32)
+    expect(SparseRange.new(UInt32)).to be_a SparseRange(UInt32)
+    expect(SparseRange.new(Int64)).to be_a SparseRange(Int64)
+    expect(SparseRange.new(UInt64)).to be_a SparseRange(UInt64)
+    expect(SparseRange.new(Int128)).to be_a SparseRange(Int128)
+    expect(SparseRange.new(UInt128)).to be_a SparseRange(UInt128)
   end
 
   it "compiles the whole public API for a representative signed and unsigned type" do
@@ -24,24 +24,24 @@ describe SparseRange do
       sparserange = SparseRange({{ type }}).new list: [one..{{ type }}.new(10)]
       sparserange.add {{ type }}.new(20)
       sparserange.subtract {{ type }}.new(5)
-      sparserange.count.should eq 10
-      sparserange.span.should eq 20
-      sparserange.size.should eq 3
-      sparserange.min.should eq 1
-      sparserange.max.should eq 20
-      sparserange.empty?.should be_false
-      sparserange.assert?.should be_true
-      sparserange.crowded?.should be_true # 10 of 20 values is exactly half
-      sparserange.each.to_a.size.should eq 10
-      sparserange.each_range.to_a.size.should eq 3
-      sparserange.to_bitstring.size.should eq 21
-      sparserange.dup.ranges.should eq sparserange.ranges
-      (sparserange + {{ type }}.new(100)).count.should eq 11
-      (sparserange - one).count.should eq 9
-      SparseRange({{ type }}).from_json(sparserange.to_json).ranges.should eq sparserange.ranges
-      sparserange.to_u128?.try(&.count).should eq 10
-      sparserange.invert!.empty?.should be_false
-      sparserange.clear.count.should eq 0
+      expect(sparserange.count).to eq 10
+      expect(sparserange.span).to eq 20
+      expect(sparserange.size).to eq 3
+      expect(sparserange.min).to eq 1
+      expect(sparserange.max).to eq 20
+      expect(sparserange.empty?).to be_false
+      expect(sparserange.assert?).to be_true
+      expect(sparserange.crowded?).to be_true # 10 of 20 values is exactly half
+      expect(sparserange.each.to_a.size).to eq 10
+      expect(sparserange.each_range.to_a.size).to eq 3
+      expect(sparserange.to_bitstring.size).to eq 21
+      expect(sparserange.dup.ranges).to eq sparserange.ranges
+      expect((sparserange + {{ type }}.new(100)).count).to eq 11
+      expect((sparserange - one).count).to eq 9
+      expect(SparseRange({{ type }}).from_json(sparserange.to_json).ranges).to eq sparserange.ranges
+      expect(sparserange.to_u128?.try(&.count)).to eq 10
+      expect(sparserange.invert!.empty?).to be_false
+      expect(sparserange.clear.count).to eq 0
     {% end %}
   end
 end
