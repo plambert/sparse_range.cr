@@ -270,11 +270,11 @@ crystal docs                   # generate API docs into docs/
 Set `SPARSE_RANGE_DEBUG=1`, or pass `debug: true` to a constructor, to trace `#add`,
 `#subtract` and `#sort!` on stderr.
 
-Specs use [Spectator](https://gitlab.com/arctic-fox/spectator) and are split per integer type
-under `spec/`. `spec/regression_spec.cr` holds the
-cross-cutting invariant, boundary and property tests, including a randomised differential test
-against `Set(Int32)`; add new behavioural tests there or to
-`spec/sparse_range_int32_spec.cr` first.
+Specs use [Spectator](https://gitlab.com/arctic-fox/spectator). `spec/per_type_spec.cr`
+generates one behavioural suite for all ten integer types, including their `T::MIN` and
+`T::MAX` boundaries; `spec/regression_spec.cr` holds the cross-cutting invariant and property
+tests, including a randomised differential test against `Set(Int32)`. Add new behavioural
+tests to one of those two rather than to a single type.
 
 ## Contributing
 
